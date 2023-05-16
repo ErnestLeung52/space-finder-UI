@@ -1,6 +1,7 @@
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { AuthService } from './AuthService';
 import { DataStack, ApiStack } from '../../../space-finder/output.json';
+import { SpaceEntry } from '../components/model/model';
 
 const spacesUrl = ApiStack.SpacesApiEndpoint36C4F3B6 + 'spaces';
 
@@ -13,9 +14,23 @@ export class DataService {
 		this.authService = authService;
 	}
 
-	public async createSpace(name: string, location: string, photo?: File) {
-		console.log('calling create space!!');
+	public reserveSpace(spaceId: string) {
+		return '123';
+	}
 
+	public async getSpaces(): Promise<SpaceEntry[]> {
+		const getSpacesResult = await fetch(spacesUrl, {
+			method: 'GET',
+			headers: {
+				Authorization: this.authService.jwtToken!,
+			},
+		});
+
+		const getSpacesResultJson = await getSpacesResult.json();
+		return getSpacesResultJson;
+	}
+
+	public async createSpace(name: string, location: string, photo?: File) {
 		const space = {} as any;
 		space.name = name;
 		space.location = location;
@@ -43,21 +58,13 @@ export class DataService {
 		// Retrieve ideneityId, accessKeyId, secretAccessKeyId, sessionToken... from cognito, in order to do any AWS SDK action that the authenticated roles allow us
 		const credentials = await this.authService.getTemporaryCredentials();
 
-		console.log(0);
-		console.log(credentials);
-
 		// Lazy init
 		if (!this.s3Client) {
-			console.log('????????');
 			this.s3Client = new S3Client({
 				credentials: credentials as any,
 				region: this.awsRegion,
 			});
 		}
-
-		console.log(1);
-
-		console.log(this.s3Client);
 
 		// Need bucket from the output of CDK deployment -> store file into bucket
 		const command = new PutObjectCommand({
@@ -70,8 +77,6 @@ export class DataService {
 		// const command = new ListObjectsCommand({
 		// 	Bucket: DataStack.SpaceFinderPhotosBucketName,
 		// });
-
-		console.log(2);
 
 		await this.s3Client.send(command);
 
