@@ -22,8 +22,15 @@ Amplify.configure({
 export class AuthService {
 	// Lazy initialization: all data inside authService(data service) will either have the states of object or undefined. When try to access it, if it's undefined, we will initialize it.
 	private user: CognitoUser | undefined;
-	private jwtToken: string | undefined;
+	public jwtToken: string | undefined;
 	private temporaryCredentials: object | undefined;
+
+	public isAuthorized() {
+		if (this.user) {
+			return true;
+		}
+		return false;
+	}
 
 	public async login(userName: string, password: string): Promise<object | undefined> {
 		try {
@@ -64,7 +71,7 @@ export class AuthService {
 				identityPoolId: AuthStack.SpaceIdentityPoolId,
 				logins: {
 					// [cognitoIdentityPool]: this.jwtToken!
-					[cognitoIdentityPool]: this.jwtToken ?? '',
+					[cognitoIdentityPool]: this.jwtToken!,
 				},
 			}),
 		});
